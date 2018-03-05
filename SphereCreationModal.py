@@ -113,6 +113,7 @@ class SphereCreationModalOperator(bpy.types.Operator):
     seg = IntVectorProperty(
             name="Segments",
             default=(32.0, 16.0, 0.0),
+            min=0,
             subtype='TRANSLATION',
             description="Segments",
             )

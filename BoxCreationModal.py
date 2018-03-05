@@ -112,9 +112,10 @@ class BoxCreationModalOperator(bpy.types.Operator):
             )
     seg = IntVectorProperty(
             name="Segments",
-            default=(0.0, 0.0, 0.0),
+            default=(0, 0, 0),
+            min=0,
             subtype='TRANSLATION',
-            description="Segments",
+            description="Segments"
             )
             
     center = BoolVectorProperty(
