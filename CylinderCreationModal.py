@@ -74,6 +74,7 @@ def ResetObjectParams(self, context):
 class CylinderCreationModalOperator(bpy.types.Operator):
     bl_idname = "object.cylinder_creation_modal_operator"
     bl_label = "Cylinder Creation Modal"
+    bl_description = "Cylinder Modal- \nAllows Cylinder creation by dragging\nClick once to place object, Click a second time to set the radius, Click again to confirm the height."
     bl_options = {'REGISTER', 'GRAB_CURSOR', 'BLOCKING', 'UNDO'}
     
     #init Vars
@@ -98,30 +99,30 @@ class CylinderCreationModalOperator(bpy.types.Operator):
     type = IntProperty(
             name="State",
             default=0,
-            description="The current object state",
+            description="The current object state\nState 1 is a 2d state\nState 2 is state 1 with the addition of the Z dimension",
             min=1,
             max=max_states
             )
     
-    
     scale = FloatVectorProperty(
-            name="scale",
+            name="Scale",
             default=(1.0, 1.0, 1.0),
             subtype='TRANSLATION',
-            description="scaling",
+            description="Scaling",
             )
+            
     seg = IntVectorProperty(
             name="Segments",
             default=(32.0, 0.0, 0.0),
             min=0,
             subtype='TRANSLATION',
-            description="Segments",
+            description="Segments\nX Segments are the segments around the outer edge\nY Segments are the segments on the end caps\nZ Segments are the segments going up the sides",
             )
             
     center = BoolVectorProperty(
                 name="Centered",
                 default=(True, True, True),
-                description="Is it Centered"
+                description="Toggles for centering the mesh on the X,Y,Z axis"
                 )
     
     def modal(self, context, event):

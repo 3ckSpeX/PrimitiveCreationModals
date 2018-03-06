@@ -74,6 +74,7 @@ def ResetObjectParams(self, context):
 class BoxCreationModalOperator(bpy.types.Operator):
     bl_idname = "object.box_creation_modal_operator"
     bl_label = "Box Creation Modal"
+    bl_description = "Box Modal- \nAllows Box creation by dragging\nClick once to place one corner, Click a second time to place the opposite corner, Click again to confirm the height."
     bl_options = {'REGISTER', 'GRAB_CURSOR', 'BLOCKING', 'UNDO'}
     
     #init Vars
@@ -98,18 +99,18 @@ class BoxCreationModalOperator(bpy.types.Operator):
     type = IntProperty(
             name="State",
             default=0,
-            description="The current object state",
+            description="The current object state\nState 1 is a 2d state\nState 2 is state 1 with the addition of the Z dimension",
             min=1,
             max=max_states
             )
     
-    
     scale = FloatVectorProperty(
-            name="scale",
+            name="Scale",
             default=(1.0, 1.0, 1.0),
             subtype='TRANSLATION',
-            description="scaling",
+            description="Scaling",
             )
+            
     seg = IntVectorProperty(
             name="Segments",
             default=(0, 0, 0),
@@ -121,7 +122,7 @@ class BoxCreationModalOperator(bpy.types.Operator):
     center = BoolVectorProperty(
                 name="Centered",
                 default=(False, False, False),
-                description="Is it Centered"
+                description="Toggles for centering the mesh on the X,Y,Z axis"
                 )
     
     def modal(self, context, event):
