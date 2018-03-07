@@ -22,7 +22,7 @@ from mathutils import Vector
 from .primitive_Circle import UpdateCircle
 from .primitive_Sphere import UpdateSphere
 
-from .gen_func import RayCastForScene, getUnitScale, PointOnGrid, CastToPlaneFromCamera
+from .gen_func import RayCastForScene, getUnitScale, PointOnGrid, CastToPlaneFromCamera, updateHeaderText
 from .View_3d_HUD import draw_callback_px
 
 def AddObject(self, context):
@@ -128,6 +128,8 @@ class SphereCreationModalOperator(bpy.types.Operator):
     def modal(self, context, event):
         #Make it redraw the hud.
         context.area.tag_redraw()
+        
+        updateHeaderText(context, self, event)
         
         #Set type to state so that in the redo panel the state is correct after creating the mesh.
         self.type = self.state
@@ -387,6 +389,7 @@ class SphereCreationModalOperator(bpy.types.Operator):
                     ResetObjectParams(self, context)
                     bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
                     self.state = self.max_states
+                    context.area.header_text_set()
                     return {'FINISHED'}
                 
                 #Deletes the mesh and remakes it (this is basically only here to make sure the mesh is renamed properly to Box.xxx)
@@ -399,6 +402,7 @@ class SphereCreationModalOperator(bpy.types.Operator):
         #Confirm Modal
         if event.type in {'RET', 'NUMPAD_ENTER'}:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            context.area.header_text_set()
             return {'FINISHED'}
         
         #Cancel modal        
@@ -407,17 +411,24 @@ class SphereCreationModalOperator(bpy.types.Operator):
             if event.shift:
                 ResetObjectParams(self, context)
                 bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                context.area.header_text_set()
                 return {'FINISHED'}
             #Reverts the mesh by one state it's like holding shift but it allows you to lock in you scaling before canceling the operation.
             if event.alt:
                 self.state = self.state - 1
-                bpy.ops.object.delete()
+                self.type = self.state
+                if self.mode == 'EDIT':
+                    bpy.ops.mesh.delete(type='VERT')
+                else:
+                    bpy.ops.object.delete()
                 AddObject(self, context)
                 bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                context.area.header_text_set()
                 return{'FINISHED'}
             #Don't try to delete any objects if you haven't made any objects.
             if not self.state > 0:
                 bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                context.area.header_text_set()
                 return {'CANCELLED'}
             #Canceling the modal with just a right click or esc, will delete any progress in making a mesh that you have done thus far.
             if self.mode == 'EDIT':
@@ -426,6 +437,7 @@ class SphereCreationModalOperator(bpy.types.Operator):
                 bpy.ops.object.delete(use_global=False)
             
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            context.area.header_text_set()
             return {'CANCELLED'}
                 
         return{'RUNNING_MODAL'}  
@@ -455,6 +467,8 @@ class SphereCreationModalOperator(bpy.types.Operator):
             # Add the region OpenGL drawing callback
             # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
             self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+                
+            updateHeaderText(context, self, event)
                 
         else:
             self.report({'WARNING'}, "Active space must be a View3d")
