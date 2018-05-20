@@ -3,6 +3,7 @@ import mathutils
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
+from .View_3d_HUD import draw_callback_px
 
 
 def RayCastForScene(context, event):
@@ -161,5 +162,27 @@ def updateHeaderText(context, self, event):
     snapInc = str(self.snapInc)
     snap = str(event.ctrl)
     seg = "X: " + str(self.seg[0]) + " Y: " + str(self.seg[1]) + " Z: " + str(self.seg[2])
-    string = "Confirm Axis: (LMB), Cancel All: (RMB,ESC), Cancel Modal: (SHIFT+RMB), Revert State: (ALT+RMB), New Mesh: (SHIFT+LMB), Center Axis: " + center + " (C), Even: " + even + " (E), Flipped: " + flip + " (F), Snapping: " + snap + " (CTRL), Grid Snap Incements: " + snapInc + " (CTRL+M WHEEL), Segments: " + seg + " (M Wheel)"
+
+    if self.state == 0:
+        string = "Confirm Placement: (LMB), Cancel All: (RMB,ESC), Cancel Modal: (SHIFT+RMB), 3d Cursor Location: (ALT+LMB), 3d Cursor Depth: (SHIFT+LMB), Snapping: " + snap + " (CTRL), Grid Snap Incements: " + snapInc + " (CTRL+M WHEEL)"
+    else:
+        string = "Confirm Axis: (LMB), Cancel All: (RMB,ESC), Cancel Modal: (SHIFT+RMB), Revert State: (ALT+RMB), New Mesh: (SHIFT+LMB), Center Axis: " + center + " (C), Even: " + even + " (E), Flipped: " + flip + " (F), Snapping: " + snap + " (CTRL), Grid Snap Incements: " + snapInc + " (CTRL+M WHEEL), Segments: " + seg + " (M Wheel)"
+    
     context.area.header_text_set(string) 
+    
+def addHUD(self, context):
+    user_preferences = context.user_preferences
+    addon_prefs = user_preferences.addons[__package__].preferences
+    if addon_prefs.HUD_Active:
+        # the arguments we pass the the callback
+        args = (self, context)
+        # Add the region OpenGL drawing callback
+        # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+
+def removeHUD(self, context):
+    user_preferences = context.user_preferences
+    addon_prefs = user_preferences.addons[__package__].preferences
+    if addon_prefs.HUD_Active:
+        bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')    
+    

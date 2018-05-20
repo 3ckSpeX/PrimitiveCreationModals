@@ -39,12 +39,14 @@ class addPrimitiveModals(AddonPreferences):
     
     Zsensitivity = FloatProperty(name="Z Sensitivity", default=1.0)
     Max_Click_Dist = FloatProperty(name="Max Click Distance", default=2500)
+    HUD_Active = BoolProperty(name="UI On", default=True)
     HUD_Center = BoolProperty(name="UI Centered", default=True)
 
     def draw(self, context):
         layout = self.layout        
         layout.prop(self, "Zsensitivity")
         layout.prop(self, "Max_Click_Dist")
+        layout.prop(self, "HUD_Active")
         layout.prop(self, "HUD_Center")
         #layout.prop(self, "number")
 
@@ -69,7 +71,7 @@ def add_object_button(self, context):
 
 
 #Add Buttons to the Tool panel
-class ModalAddPanel(bpy.types.Panel):
+class VIEW3D_PT_ModalAddPanel(bpy.types.Panel):
     """Creates a Panel in the Toolbar"""
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
@@ -87,14 +89,14 @@ class ModalAddPanel(bpy.types.Panel):
 def register():
 
     bpy.utils.register_class(addPrimitiveModals)
-    bpy.utils.register_class(ModalAddPanel)
+    bpy.utils.register_class(VIEW3D_PT_ModalAddPanel)
     bpy.types.INFO_MT_mesh_add.prepend(add_object_button)
     bpy.utils.register_module(__name__)
 
 def unregister():
 
     bpy.utils.unregister_class(addPrimitiveModals)
-    bpy.utils.unregister_class(ModalAddPanel)
+    bpy.utils.unregister_class(VIEW3D_PT_ModalAddPanel)
     bpy.types.INFO_MT_mesh_add.remove(add_object_button)
     bpy.utils.unregister_module(__name__)
     

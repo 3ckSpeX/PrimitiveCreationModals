@@ -22,8 +22,8 @@ from mathutils import Vector
 from .primitive_Circle import UpdateCircle
 from .primitive_Cylinder import UpdateCylinder
 
-from .gen_func import RayCastForScene, getUnitScale, PointOnGrid, CastToPlaneFromCamera, updateHeaderText
-from .View_3d_HUD import draw_callback_px
+from .gen_func import RayCastForScene, getUnitScale, PointOnGrid, CastToPlaneFromCamera, updateHeaderText, GetBestViewAxis, addHUD, removeHUD
+
 
 def AddObject(self, context):
     #State 1 and 0 should be the same 
@@ -344,7 +344,7 @@ class CylinderCreationModalOperator(bpy.types.Operator):
             if event.value == 'PRESS':
                 
                 #If holding shift reset the modal to continue making a new object without having to press a button again, good for making several objects quickly.
-                if event.shift:
+                if event.shift and not self.state == 0:
                     self.state = 0
                     ResetObjectParams(self, context)
                     self.scale = (0, 0, 1)
@@ -357,7 +357,22 @@ class CylinderCreationModalOperator(bpy.types.Operator):
                     #Undo push so you can undo per object created while in the modal
                     bpy.ops.ed.undo_push(message="Add an undo step *function may be moved*")
                     
-                    self.loc, self.norm, self.rot, self.boxDrawMode = RayCastForScene(context, event)
+                    #If holding alt start the mesh at the 3d cursor
+                    if event.alt:
+                        self.loc = bpy.context.scene.cursor_location
+                        self.norm = GetBestViewAxis(context)[0]
+                        self.rot = self.norm.to_track_quat('Z', 'Y').to_euler()
+                        self.boxDrawMode = 'OBJECT'
+                    #If holding shift use 3d cursor for depth
+                    elif event.shift:
+                        self.norm = GetBestViewAxis(context)[0]
+                        self.loc = CastToPlaneFromCamera(context, event, bpy.context.scene.cursor_location, self.norm)
+                        self.rot = self.norm.to_track_quat('Z', 'Y').to_euler()
+                        self.boxDrawMode = 'OBJECT'
+                    else:
+                        self.loc, self.norm, self.rot, self.boxDrawMode = RayCastForScene(context, event)
+                        
+                    
                     if event.ctrl:
                         #Don't Grid snap if you're creating a box on another object
                         if self.boxDrawMode == 'GRID' or self.boxDrawMode == 'SPACE':
@@ -387,7 +402,7 @@ class CylinderCreationModalOperator(bpy.types.Operator):
                 self.state += 1
                 if self.state > self.max_states:
                     ResetObjectParams(self, context)
-                    bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                    removeHUD(self, context)
                     context.area.header_text_set()
                     #self.state = self.max_states
                     return {'FINISHED'}
@@ -401,7 +416,7 @@ class CylinderCreationModalOperator(bpy.types.Operator):
             
         #Confirm Modal
         if event.type in {'RET', 'NUMPAD_ENTER'}:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            removeHUD(self, context)
             context.area.header_text_set()
             return {'FINISHED'}
         
@@ -410,7 +425,7 @@ class CylinderCreationModalOperator(bpy.types.Operator):
             #Allows you to cancel the operation while keeping everything made until this point, good for making planes and such.
             if event.shift:
                 ResetObjectParams(self, context)
-                bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                removeHUD(self, context)
                 context.area.header_text_set()
                 return {'FINISHED'}
             #Reverts the mesh by one state it's like holding shift but it allows you to lock in you scaling before canceling the operation.
@@ -423,12 +438,12 @@ class CylinderCreationModalOperator(bpy.types.Operator):
                     bpy.ops.object.delete()
                 
                 AddObject(self, context)
-                bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                removeHUD(self, context)
                 context.area.header_text_set()
                 return{'FINISHED'}
             #Don't try to delete any objects if you haven't made any objects.
             if not self.state > 0:
-                bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+                removeHUD(self, context)
                 context.area.header_text_set()
                 return {'CANCELLED'}
             #Don't try to delete any objects if you haven't made any objects.
@@ -437,7 +452,7 @@ class CylinderCreationModalOperator(bpy.types.Operator):
             else:
                 bpy.ops.object.delete(use_global=False)
             
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            removeHUD(self, context)
             context.area.header_text_set()
             return {'CANCELLED'}
                 
@@ -464,11 +479,11 @@ class CylinderCreationModalOperator(bpy.types.Operator):
             
             
             # the arguments we pass the the callback
-            args = (self, context)
+             #args = (self, context)
             # Add the region OpenGL drawing callback
             # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
-                
+             #self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+            addHUD(self, context)    
             updateHeaderText(context, self, event)
                 
         else:
