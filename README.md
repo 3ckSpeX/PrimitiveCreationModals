@@ -17,5 +17,8 @@ SHIFT + Left click: Finishes the mesh at its current state and keep the modal ac
 SHIFT + Right click: Cancels the modal but keeps the mesh as it currently is. <br />
 Right click, and ESC: they cancel the modal and delete anything you had made in the modal to that point.<br />
 ALT + Right click: Cancels the modal keeping the mesh, but reverts it by one state. i.e. you make a box and alt + right click it will now be a plane with the same X,Y size as the box was. <br />
+Before placement of object location:<br />
+SHIFT + Left click: places object origin at 3d cursor depth with closest axis for rotation.<br />
+ALT + Left click: places object origin at 3d cursor location with closest axis for rotation. (good for pseudo-snapping or precise placement.)<br />
 <br />
 You can also change the size, state, segments,and centers in the undo/redo panel (F6 menu) in the bottom left corner.
